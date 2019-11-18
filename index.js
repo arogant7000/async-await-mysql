@@ -37,9 +37,38 @@ GROUP by siswa.id`;
   return dataList;
 }
 
-async function getData() {
+async function getDetail(id) {
   let dataList = await getTagihan();
-  console.log(dataList);
+
+  var result = [];
+
+  dataList.forEach(async data => {
+    let queryDetail = `SELECT 
+                          tagihan.nomor_tagihan, 
+                          tagihan.tahun, 
+                          tagihan.bulan, 
+                          tagihan.jenis_tagihan, 
+                          biaya.keterangan,
+                          tagihan_detail.jumlah 
+                        FROM 
+                          tagihan 
+                          join tagihan_detail on tagihan.id = tagihan_detail.id_tagihan 
+                          join biaya on tagihan_detail.id_biaya = biaya.id 
+                          join siswa_kelas on tagihan.siswa_kelas = siswa_kelas.id 
+                          left join pembayaran on tagihan.id_pembayaran = pembayaran.id 
+                        WHERE 
+                          tagihan.status = "ACTIVE" 
+                          and siswa_kelas.id_siswa = ${id} 
+                          and ( pembayaran.status != "PAID" or pembayaran.id is null )  
+                        ORDER BY tahun, bulan ASC`;
+    let dataDetail = await query(queryDetail);
+    data['detail'] = dataDetail;
+    // result.push(data);
+
+    console.log(data);
+  });
+
+  // console.log(result);
 }
 
-getData();
+getDetail();
